@@ -1,0 +1,39 @@
+---
+version: "3.9"
+services:
+  postgres:
+    image: postgres:14.8-alpine3.18
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "admin"
+      POSTGRES_DB: "urlshortenerservice"
+      PGDATA: "/var/lib/postgresql/data/urlshortenerservice"
+    ports:
+      - 5432:5432
+    networks:
+      - proxy-net
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    networks:
+      - proxy-net
+
+  urlshortenerservice:
+    image: jaha12/urlshortener:1.1
+    ports:
+      - 1639:8080
+    environment:
+      ConnectionStrings:Database: "Server=host.docker.internal;Port=5432;Database=urlshortenerservice;User ID=postgres;Password=admin;Timeout=30"
+      ConnectionStrings:RedisHost: "host.docker.internal"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - proxy-net
+
+networks:
+  proxy-net:
+    external:
+      name: extnet
